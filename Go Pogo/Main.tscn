@@ -1,0 +1,93 @@
+[gd_scene load_steps=12 format=4 uid="uid://djlh5o56djjv7"]
+
+[ext_resource type="Texture2D" uid="uid://d2pxr3hrkg22p" path="res://icon.svg" id="1_glv2v"]
+[ext_resource type="Script" uid="uid://re2ekve6sbkg" path="res://Scripts/player.gd" id="1_r0du0"]
+[ext_resource type="Texture2D" uid="uid://dh7g5mqmvkqfg" path="res://simple_tileset.png" id="2_uu6xs"]
+[ext_resource type="Script" uid="uid://dpame8mpnbvc7" path="res://trick_manager.gd" id="3_fos0i"]
+[ext_resource type="Script" uid="uid://5o45gfr8yhik" path="res://Scripts/killzone.gd" id="4_cm0pq"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uu6xs"]
+radius = 7.95456
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_glv2v"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_r0du0"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_cm0pq"]
+texture = ExtResource("2_uu6xs")
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:0/0 = 0
+1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+2:0/0 = 0
+2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:0/0 = 0
+3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:0/0 = 0
+4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+5:0/0 = 0
+5:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:1/0 = 0
+0:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:1/0 = 0
+1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:1/0 = 0
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+4:1/0 = 0
+4:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+5:1/0 = 0
+5:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
+[sub_resource type="TileSet" id="TileSet_fos0i"]
+physics_layer_0/collision_layer = 1
+physics_layer_0/physics_material = SubResource("PhysicsMaterial_r0du0")
+sources/0 = SubResource("TileSetAtlasSource_cm0pq")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fos0i"]
+size = Vector2(2814.5, 60)
+
+[node name="Main" type="Node2D"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(575, 412)
+script = ExtResource("1_r0du0")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_glv2v")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+scale = Vector2(2, 2)
+shape = SubResource("CircleShape2D_uu6xs")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+zoom = Vector2(1.5, 1.5)
+position_smoothing_enabled = true
+position_smoothing_speed = 1.75
+
+[node name="TrickManager" type="Node2D" parent="Player"]
+script = ExtResource("3_fos0i")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+visible = false
+position = Vector2(716, 733)
+scale = Vector2(17.6, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("RectangleShape2D_glv2v")
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D"]
+texture = ExtResource("1_glv2v")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AAAqACQAAAAAAAAAAAAqACUAAAAAAAEAAAArACQAAAABAAAAAAArACUAAAABAAEAAAAoACQAAAAAAAAAAAAoACUAAAAAAAEAAAApACQAAAABAAAAAAApACUAAAABAAEAAAAmACQAAAAAAAAAAAAmACUAAAAAAAEAAAAnACQAAAABAAAAAAAnACUAAAABAAEAAAAkACQAAAAAAAAAAAAkACUAAAAAAAEAAAAlACQAAAABAAAAAAAlACUAAAABAAEAAAAiACQAAAAAAAAAAAAiACUAAAAAAAEAAAAjACQAAAABAAAAAAAjACUAAAABAAEAAAAgACQAAAAAAAAAAAAgACUAAAAAAAEAAAAhACQAAAABAAAAAAAhACUAAAABAAEAAAAeACQAAAAAAAAAAAAeACUAAAAAAAEAAAAfACQAAAABAAAAAAAfACUAAAABAAEAAAAcACQAAAAAAAAAAAAdACQAAAABAAAAAAAdACUAAAABAAEAAAAcACUAAAAAAAEAAAA=")
+tile_set = SubResource("TileSet_fos0i")
+
+[node name="KillZone" type="Area2D" parent="."]
+script = ExtResource("4_cm0pq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="KillZone"]
+position = Vector2(1020.75, 863)
+shape = SubResource("RectangleShape2D_fos0i")
