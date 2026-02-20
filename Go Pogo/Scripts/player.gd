@@ -1,17 +1,26 @@
 extends CharacterBody2D
 
+##Signals
+signal jumped(value, buckling_status) ##emit jump data in launch() for feedback label
+
 ## Movement variables
-@export var base_k := 3.0  # Stiffness coefficient
-@export var add_k := 0.25   # k reward
-@export var max_k := 10.0   # maximum k
-@export var max_compression_x := 100.0 # Maximum "charge" allowed
-@export var min_compression_x := 50.0
-@export var charge_decay_speed := 100.0
-@export var compression_speed := 150.0 # How fast x increases while holding button
 @export var bounce_restitution := 0.8 #how much energy is saved from init bounce
 @export var gravity := 900
 @export var max_fall_speed := 1200
 @export var air_rotation_speed := 300.0
+
+##K Variables
+@export var base_k := 3.0  # Stiffness coefficient
+@export var add_k := 0.25   # k reward
+@export var max_k := 10.0   # maximum k
+
+##Compression variables
+@export var max_compression_x := 100.0 # Maximum "charge" allowed
+@export var min_compression_x := 50.0
+@export var charge_decay_speed := 100.0
+@export var compression_speed := 150.0 # How fast x increases while holding button
+@export var peak_hold_time := 0.08 # Seconds to stay at 100 before buckling
+var peak_timer := 0.0
 
 #sprite/animation variables
 @onready var sprite = $Sprite2D
@@ -23,9 +32,7 @@ var is_compressing  := false
 var last_velocity_y := 0.0
 var current_rot     := get_rotation_degrees()
 var is_buckling     := false
-
-# Weapon placeholder
-#var held_item = null # Replace with weapon/item object in future
+var has_buckled     := false
 
 func _physics_process(delta):
 	#AIRBORNE LOGIC
@@ -52,10 +59,13 @@ func _physics_process(delta):
 		if Input.is_action_pressed("move_up"):
 			is_compressing = true
 			
-			if current_x >= max_compression_x: #slight buffer
-				#Buckle/engage decay
-				is_buckling = true
-				
+			if current_x >= max_compression_x: ##AT PEAK
+				#Delay then buckle
+				peak_timer += delta
+				if peak_timer >= peak_hold_time:
+					is_buckling = true
+					has_buckled = true
+					
 			if is_buckling:
 				current_x -= charge_decay_speed * delta
 				
@@ -85,12 +95,17 @@ func _physics_process(delta):
 			else:
 				print("Early Release. No K bonus.")
 				
+			jumped.emit(current_x, has_buckled)
+			peak_timer = 0.0
 			launch_player()
 	move_and_slide()
-	apply_visual_juice()
-
+	#apply_visual_juice()
+	
 func launch_player():
-		# F = k * x 
+	#reset buckle after launch
+	has_buckled = false 
+	
+	# F = k * x 
 	# We use current_x as our displacement. 
 	# We multiply by -1 because in Godot, Up is Negative Y.
 	var spring_force = (current_k * current_x) * -1
@@ -104,16 +119,16 @@ func launch_player():
 	print("force added")
 	print("Current Rotation in degrees: ", current_rot)
 	
-func apply_visual_juice():
-	if is_on_floor():
-		# As current_x increases (0 to 100), y scale goes down (1.0 to 0.5)
-		# and x scale goes up (1.0 to 1.5) to preserve volume
-		var squash_amount = (current_x / max_compression_x) * 0.08
-		sprite.scale.y = 0.25 - squash_amount
-		sprite.scale.x = 0.25 + squash_amount
-	else:
-		# In the air, stretch based on vertical velocity
-		var stretch = clamp(abs(velocity.y) / max_fall_speed, 0, 0.05)
-		sprite.scale.y = 0.25 + stretch
-		sprite.scale.x = 0.25 - stretch
-		
+	##LOGIC MOVED TO SCRIPT ON SPRITE
+#func apply_visual_juice():
+	#if is_on_floor():
+		## As current_x increases (0 to 100), y scale goes down (1.0 to 0.5)
+		## and x scale goes up (1.0 to 1.5) to preserve volume
+		#var squash_amount = (current_x / max_compression_x) * 0.08
+		#sprite.scale.y = 0.25 - squash_amount
+		#sprite.scale.x = 0.25 + squash_amount
+	#else:
+		## In the air, stretch based on vertical velocity
+		#var stretch = clamp(abs(velocity.y) / max_fall_speed, 0, 0.05)
+		#sprite.scale.y = 0.25 + stretch
+		#sprite.scale.x = 0.25 - stretch
