@@ -25,6 +25,11 @@ var peak_timer := 0.0
 #sprite/animation variables
 @onready var sprite = $Sprite2D
 
+#manager variables
+@onready var trick_manager = $TrickManager
+@onready var landing_manager = $LandingManager
+@onready var floor_detector = $RayCast2D
+
 # State variables
 var current_x       := 0.0
 var current_k       := base_k
@@ -33,10 +38,12 @@ var last_velocity_y := 0.0
 var current_rot     := get_rotation_degrees()
 var is_buckling     := false
 var has_buckled     := false
+var can_trick       := false
 
 func _physics_process(delta):
 	#AIRBORNE LOGIC
 	if not is_on_floor():
+		can_trick = floor_detector.is_colliding()
 		last_velocity_y = velocity.y
 		velocity.y += gravity * delta
 		velocity.y = clamp(velocity.y, -99999, max_fall_speed)
@@ -44,6 +51,16 @@ func _physics_process(delta):
 	else: #if on ground
 		#Initial Impact
 		if last_velocity_y > 50:
+			var error = landing_manager.get_landing_error()
+			#Ask TM judge landing
+			landing_manager.process_impact(error, last_velocity_y)
+			#If it wasnt bad, pay out multiplier, otherwise, penalize
+			if error < 45.0:
+				trick_manager.reset_multiplier(true) #success = payout
+				rotation_degrees = 0 #snap to upright
+			else:
+				trick_manager.reset_multiplier(false) #failure: Lose multiplier
+			
 			if Input.is_action_pressed("move_up"):
 				#initial "Slam" boost into compression
 				current_x = clamp(current_x + (last_velocity_y * 0.1), 0, max_compression_x)
@@ -92,8 +109,10 @@ func _physics_process(delta):
 				var reward = add_k * accuracy
 				current_k = clamp(current_k + reward, base_k, max_k)
 				print("Great Timing! Accuracy: ", accuracy, "Added reward of ", reward, "New K: ", current_k)
+			elif has_buckled:
+				current_k = base_k
 			else:
-				print("Early Release. No K bonus.")
+				print("Early release, no k reward")
 				
 			jumped.emit(current_x, has_buckled)
 			peak_timer = 0.0

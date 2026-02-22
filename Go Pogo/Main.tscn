@@ -1,12 +1,13 @@
-[gd_scene load_steps=14 format=4 uid="uid://djlh5o56djjv7"]
+[gd_scene load_steps=15 format=4 uid="uid://djlh5o56djjv7"]
 
 [ext_resource type="Texture2D" uid="uid://d2pxr3hrkg22p" path="res://icon.svg" id="1_glv2v"]
-[ext_resource type="Script" uid="uid://re2ekve6sbkg" path="res://Scripts/player.gd" id="1_r0du0"]
+[ext_resource type="Script" uid="uid://dmfgw1fj4omij" path="res://Scripts/player2.0.gd" id="1_trn2v"]
 [ext_resource type="Texture2D" uid="uid://dh7g5mqmvkqfg" path="res://simple_tileset.png" id="2_uu6xs"]
 [ext_resource type="Script" uid="uid://dc76flya2x05q" path="res://sprite_2d.gd" id="3_3dxm6"]
 [ext_resource type="Script" uid="uid://dpame8mpnbvc7" path="res://trick_manager.gd" id="3_fos0i"]
 [ext_resource type="Script" uid="uid://5o45gfr8yhik" path="res://Scripts/killzone.gd" id="4_cm0pq"]
 [ext_resource type="Script" uid="uid://cpgaqwirgaq8f" path="res://jump_timing_feedback.gd" id="5_lgr22"]
+[ext_resource type="Script" uid="uid://caqxw8whdwn1e" path="res://LandingManager.gd" id="6_trn2v"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uu6xs"]
 radius = 7.95456
@@ -54,7 +55,9 @@ size = Vector2(2814.5, 60)
 
 [node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(575, 412)
-script = ExtResource("1_r0du0")
+script = ExtResource("1_trn2v")
+
+[node name="RayCast2D" type="RayCast2D" parent="Player"]
 
 [node name="Sprite2D" type="Sprite2D" parent="Player"]
 scale = Vector2(0.25, 0.25)
@@ -72,6 +75,9 @@ position_smoothing_speed = 2.5
 
 [node name="TrickManager" type="Node2D" parent="Player"]
 script = ExtResource("3_fos0i")
+
+[node name="LandingManager" type="Node2D" parent="Player"]
+script = ExtResource("6_trn2v")
 
 [node name="JumpTimingFeedback" type="Label" parent="Player"]
 offset_left = 1.0
@@ -110,4 +116,5 @@ position = Vector2(1020.75, 863)
 shape = SubResource("RectangleShape2D_fos0i")
 
 [connection signal="jumped" from="Player" to="Player/JumpTimingFeedback" method="_on_player_jumped"]
+[connection signal="landing_processed" from="Player/LandingManager" to="Player/JumpTimingFeedback" method="_on_landing_processed"]
 [connection signal="timeout" from="Player/JumpTimingFeedback/FeedbackTimer" to="Player/JumpTimingFeedback" method="_on_feedback_timer_timeout"]

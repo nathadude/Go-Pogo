@@ -1,55 +1,50 @@
 extends Node2D
 
-## Signals to talk to the rest of the game
-signal trick_completed(trick_name, score_value)
-signal rotation_updated(current_total)
+signal multiplier_changed(new_value)
 
-@export var leeway := 15.0
-@export var rotation_threshold := 360 - leeway # Degrees for a "full" flip (with 30d of leeway)
+@export var rotation_speed := 400.0 
+@export var trick_multiplier_increment := 0.5
 
-var total_rotation := 0.0
-var last_frame_rotation := 0.0
-var is_tracking := false
+var current_multiplier := 1.0
+var total_rotation_this_jump := 0.0
+var is_trick_animating := false # Used for the "tap" trick
 
-@warning_ignore("unused_parameter") #not sure what this is yet
+@onready var player = get_parent()
+
 func _process(delta):
-	var parent = get_parent()
-	
-	if not parent.is_on_floor():
-		if not is_tracking:
-			_start_tracking(parent.rotation_degrees)
-		
-		_update_rotation(parent.rotation_degrees)
-	else:
-		if is_tracking:
-			_finalize_trick()
+	# The Player.gd script toggles "can_trick" based on the RayCast
+	if not player.is_on_floor() and player.can_trick:
+		if Input.is_action_pressed("move_up") and not is_trick_animating:
+			_handle_rotation_input(delta)
 
-func _start_tracking(start_rot):
-	is_tracking = true
-	total_rotation = 0.0
-	last_frame_rotation = start_rot
+func _handle_rotation_input(delta):
+	var rotation_step = rotation_speed * delta
+	player.rotation_degrees += rotation_step
+	total_rotation_this_jump += rotation_step
+	
+	# Every full 360 rotation boosts the multiplier
+	if total_rotation_this_jump >= 360.0:
+		current_multiplier += trick_multiplier_increment
+		total_rotation_this_jump -= 360.0 
+		multiplier_changed.emit(current_multiplier)
 
-func _update_rotation(current_rot):
-	# Calculate the delta rotation between frames
-	var frame_diff = current_rot - last_frame_rotation
+## Sonic Rush Style "Tap" Trick (Optional: Call this from Player.gd if you prefer taps)
+func perform_midair_trick(sprite: Sprite2D):
+	if is_trick_animating: return 
 	
-	# Handle the 180 to -180 wrap-around jump if necessary
-	if frame_diff > 180: frame_diff -= 360
-	if frame_diff < -180: frame_diff += 360
+	is_trick_animating = true
+	current_multiplier += 0.5
+	multiplier_changed.emit(current_multiplier)
 	
-	total_rotation += abs(frame_diff)
-	last_frame_rotation = current_rot
-	rotation_updated.emit(total_rotation)
+	var tween = create_tween()
+	tween.tween_property(sprite, "rotation_degrees", player.rotation_degrees + 360, 0.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tween.finished.connect(func(): is_trick_animating = false)
 
-func _finalize_trick():
-	is_tracking = false
+func reset_multiplier(pay_out: bool):
+	if pay_out:
+		# Logic for adding to score would go here
+		pass
 	
-	# Determine how many flips were completed
-	var flip_count = int(total_rotation / 360)
-	
-	if total_rotation >= rotation_threshold:
-		var score = flip_count * 100
-		var trick_name = str(flip_count) + "x FLIP!" if flip_count > 1 else "FLIP!"
-		trick_completed.emit(trick_name, score)
-	
-	total_rotation = 0.0
+	current_multiplier = 1.0
+	total_rotation_this_jump = 0.0
+	multiplier_changed.emit(current_multiplier)
