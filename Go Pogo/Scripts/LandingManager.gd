@@ -21,13 +21,18 @@ func _process_reward(error: float):
 	landing_processed.emit(msg, false)
 
 func _handle_bad_landing(impact_vel: float):
+	# 1. Visual Flare
 	if sprite.has_method("play_bail_flash"):
 		sprite.play_bail_flash()
 	
-	player.current_k = player.base_k
-	# Give a stronger Pity Bounce to ensure they clear the ground
-	player.velocity.y = -impact_vel * 0.65 
-	player.position.y -= 10 # Force them higher so RayCast resets
+	# 2. Physics: BIG Pity Bounce
+	# We multiply by 0.8 instead of 0.5 to get them AWAY from the ground
+	player.velocity.y = -impact_vel * 0.8 
+	player.position.y -= 15 # Physical shove away from floor
+	
+	# 3. Automation: Force the player back to 0 so they don't loop
+	var tween = create_tween()
+	tween.tween_property(player, "rotation_degrees", 0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	
 	landing_processed.emit("BAD LANDING!", true)
 

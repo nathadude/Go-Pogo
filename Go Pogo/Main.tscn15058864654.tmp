@@ -53,11 +53,10 @@ size = Vector2(2814.5, 60)
 [node name="Main" type="Node2D"]
 
 [node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
-position = Vector2(576, 482)
+position = Vector2(576, 513)
 script = ExtResource("1_trn2v")
 
 [node name="RayCast2D" type="RayCast2D" parent="Player"]
-target_position = Vector2(0, 70)
 
 [node name="Sprite2D" type="Sprite2D" parent="Player"]
 scale = Vector2(0.25, 0.25)
@@ -71,20 +70,21 @@ shape = SubResource("CircleShape2D_uu6xs")
 [node name="Camera2D" type="Camera2D" parent="Player"]
 zoom = Vector2(1.5, 1.5)
 position_smoothing_enabled = true
+position_smoothing_speed = 2.5
 
-[node name="TrickManager" type="Node2D" parent="Player"]
-script = ExtResource("3_fos0i")
-
-[node name="LandingManager" type="Node2D" parent="Player"]
-script = ExtResource("6_trn2v")
-
-[node name="HeightTracker" type="Label" parent="Player" groups=["height_label"]]
+[node name="HeightTracker" type="Label" parent="Player/Camera2D" groups=["height_label"]]
 offset_left = -134.0
 offset_top = 17.0
 offset_right = -24.0
 offset_bottom = 40.0
 text = "HeightTracker"
 script = ExtResource("4_03owx")
+
+[node name="TrickManager" type="Node2D" parent="Player"]
+script = ExtResource("3_fos0i")
+
+[node name="LandingManager" type="Node2D" parent="Player"]
+script = ExtResource("6_trn2v")
 
 [node name="JumpTimingFeedback" type="Label" parent="." groups=["feedback_label"]]
 offset_left = 593.0

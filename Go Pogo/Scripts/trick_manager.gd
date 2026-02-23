@@ -2,7 +2,7 @@ extends Node2D
 
 signal multiplier_changed(new_value)
 
-@export var rotation_speed := 400.0 
+@export var rotation_speed := 600.0 
 @export var trick_multiplier_increment := 0.5
 
 var current_multiplier := 1.0
@@ -19,8 +19,8 @@ func _process(delta):
 
 func _handle_rotation_input(delta):
 	var rotation_step = rotation_speed * delta
-	player.rotation_degrees += rotation_step
-	total_rotation_this_jump += rotation_step
+	player.rotation_degrees -= rotation_step
+	total_rotation_this_jump -= rotation_step
 	
 	# Every full 360 rotation boosts the multiplier
 	if total_rotation_this_jump >= 360.0:

@@ -8,6 +8,8 @@ signal jumped(value, buckling_status)
 @export var gravity := 900
 @export var max_fall_speed := 1200
 @export var bounce_restitution := 0.8
+@export var bounce_stop_point := 150
+#ROTATION HANDLING IN TRICK MANAGER
 
 @export_group("Spring Constants (K)")
 @export var base_k := 3.0
@@ -37,6 +39,12 @@ var can_trick        := false
 var peak_timer       := 0.0
 var last_velocity_y  := 0.0
 
+func _ready():
+	# Tell label who player is
+	var label = get_tree().get_first_node_in_group("feedback_label")
+	if label:
+		label.player = self
+
 func _physics_process(delta):
 	# 1. AIRBORNE LOGIC
 	if not is_on_floor():
@@ -53,10 +61,10 @@ func _physics_process(delta):
 			#last_velocity_y = 0 DO NOT ZERO HERE, LET THE HANDLERS HANDLE, DUH.
 
 	# 3. INPUT HANDLING: COMPRESSION
-	# This triggers if we are on floor OR close enough (RayCast hitting)
+	# This tri1ggers if we are on floor OR close enough (RayCast hitting)
 	# BIG ISSUE HERE FOR FUTURE FIX: COMPRESSION TIME VARIES AFTER RAYCAST IMPLEMENTATION
 	#Raycast and collision are fighting over
-	if is_on_floor() or floor_detector.is_colliding():
+	if is_on_floor():
 		if Input.is_action_pressed("move_up") and not has_buckled:
 			_handle_compression_logic(delta)
 		
@@ -73,24 +81,26 @@ func _handle_impact():
 	if error < 45.0:
 		trick_manager.reset_multiplier(true)
 		
-		# SOUL RESTORED: Smoothly right the pogo stick instead of snapping
 		var tween = create_tween()
 		tween.tween_property(self, "rotation_degrees", 0, 0.1).set_trans(Tween.TRANS_SINE)
 		
 		if Input.is_action_pressed("move_up"):
-			# Active Slam
 			current_x = clamp(current_x + (last_velocity_y * 0.12), 0, max_compression_x)
 		else:
-			# If aren't holding the button MUST bounce back up
-			var decay_factor = clamp(1.0 - (last_velocity_y / max_fall_speed), 0.4, 1.0)
-			current_k = lerp(current_k, base_k, 0.2) # Slight decay of K
-			velocity.y = -last_velocity_y * bounce_restitution
-			position.y -= 5 # Pop off the floor slightly to maintain state
+			# --- FIX: THE IDLE STOP ---
+			# If the fall speed is less than 200, we don't bounce back up.
+			# We just let the player sit on the floor.
+			if last_velocity_y > bounce_stop_point:
+				current_k = lerp(current_k, base_k, 0.2)
+				velocity.y = -last_velocity_y * bounce_restitution
+				position.y -= 5 # Pop off to maintain state
+			else:
+				velocity.y = 0
+				# We don't change position.y, so is_on_floor() stays true
 	else:
-		# BAIL: TrickManager handles the reset, LandingManager handles the pity bounce
 		trick_manager.reset_multiplier(false)
 	
-	last_velocity_y = 0 # Now we clear it
+	last_velocity_y = 0
 
 ## Manages the X variable and Buckling state
 func _handle_compression_logic(delta):
@@ -118,7 +128,7 @@ func _finalize_jump():
 	var accuracy = current_x / max_compression_x
 	
 	if has_buckled:
-		current_k = base_k # Penalty for buckling
+		current_k = current_k - (current_k/4) # Penalty for buckling
 	elif accuracy > 0.8:
 		var reward = add_k * accuracy
 		current_k = clamp(current_k + reward, base_k, max_k)
