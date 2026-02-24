@@ -11,6 +11,11 @@ var is_trick_animating := false # Used for the "tap" trick
 
 @onready var player = get_parent()
 
+#connect score label
+@onready var score_label = get_tree().get_first_node_in_group("score_label")
+@onready var points = 0
+@onready var msg = ""
+
 func _process(delta):
 	# The Player.gd script toggles "can_trick" based on the RayCast
 	if not player.is_on_floor() and player.can_trick:
@@ -24,6 +29,7 @@ func _handle_rotation_input(delta):
 	
 	# Every full 360 rotation boosts the multiplier
 	if total_rotation_this_jump >= 360.0:
+		#add score to label
 		current_multiplier += trick_multiplier_increment
 		total_rotation_this_jump -= 360.0 
 		multiplier_changed.emit(current_multiplier)

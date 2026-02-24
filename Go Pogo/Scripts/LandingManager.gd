@@ -4,6 +4,7 @@ signal landing_processed(msg, is_bad)
 
 @onready var player = get_parent()
 @onready var sprite = player.get_node("Sprite2D")
+@onready var score_label = get_tree().get_first_node_in_group("score_label")
 
 func process_impact(angle: float, velocity_y: float):
 	if angle >= 45.0:

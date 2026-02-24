@@ -29,6 +29,11 @@ signal jumped(value, buckling_status)
 @onready var landing_manager = $LandingManager
 @onready var floor_detector = $RayCast2D
 
+## --- New Air Stats ---
+@export var accumulated_rotation := 0.0
+@export var last_frame_rotation := 0.0
+@export var has_flipped := false
+
 ## --- State Variables ---
 var current_x        := 0.0
 var current_k        := base_k
@@ -48,6 +53,17 @@ func _ready():
 func _physics_process(delta):
 	# 1. AIRBORNE LOGIC
 	if not is_on_floor():
+		var rot_delta = abs(rotation_degrees - last_frame_rotation)
+
+		# Guard against the 'wrap-around' spike (e.g., jumping from 179 to -179)
+		if rot_delta < 300: 
+				accumulated_rotation += rot_delta
+
+		last_frame_rotation = rotation_degrees
+
+# Check if they've hit the 360 mark (with a little leeway, e.g., 330)
+		if accumulated_rotation >= 330:
+					has_flipped = true
 		# Raycast check: If we are close to ground, we can't trick anymore
 		can_trick = not floor_detector.is_colliding()
 		last_velocity_y = velocity.y # track fall speed
@@ -75,32 +91,48 @@ func _physics_process(delta):
 
 ## Handles the moment the pogo hits the dirt
 func _handle_impact():
-	var error = landing_manager.get_landing_error()
-	landing_manager.process_impact(error, last_velocity_y)
+	# 1. ALWAYS get the real error to see if we should bail
+	var landing_error = landing_manager.get_landing_error()
 	
-	if error < 45.0:
+	# 2. Judge if this is a "Bail" first
+	if landing_error >= 45.0:
+		# FAIL: You hit the ground sideways/upside down
+		trick_manager.reset_multiplier(false)
+		landing_manager.process_impact(landing_error, last_velocity_y) # Show "BAD LANDING"
+		
+		# Reset trick stats because you crashed
+		has_flipped = false
+		accumulated_rotation = 0.0
+		
+	else:
+		# SUCCESSFUL PHYSICS: The pogo is upright enough to survive
 		trick_manager.reset_multiplier(true)
 		
-		var tween = create_tween()
-		tween.tween_property(self, "rotation_degrees", 0, 0.1).set_trans(Tween.TRANS_SINE)
+		# Only show feedback/scores if they actually completed a trick
+		if has_flipped:
+			landing_manager.process_impact(landing_error, last_velocity_y)
+			has_flipped = false
+			accumulated_rotation = 0.0
 		
-		if Input.is_action_pressed("move_up"):
-			current_x = clamp(current_x + (last_velocity_y * 0.12), 0, max_compression_x)
-		else:
-			# --- FIX: THE IDLE STOP ---
-			# If the fall speed is less than 200, we don't bounce back up.
-			# We just let the player sit on the floor.
-			if last_velocity_y > bounce_stop_point:
-				current_k = lerp(current_k, base_k, 0.2)
-				velocity.y = -last_velocity_y * bounce_restitution
-				position.y -= 5 # Pop off to maintain state
-			else:
-				velocity.y = 0
-				# We don't change position.y, so is_on_floor() stays true
-	else:
-		trick_manager.reset_multiplier(false)
+		# Handle the actual bounce/slam
+		_apply_successful_landing_physics()
+
+	last_velocity_y = 0 
+
+## Helper to keep _handle_impact readable
+func _apply_successful_landing_physics():
+	var tween = create_tween()
+	tween.tween_property(self, "rotation_degrees", 0, 0.1).set_trans(Tween.TRANS_SINE)
 	
-	last_velocity_y = 0
+	if Input.is_action_pressed("move_up"):
+		current_x = clamp(current_x + (last_velocity_y * 0.12), 0, max_compression_x)
+	else:
+		if last_velocity_y > bounce_stop_point:
+			current_k = lerp(current_k, base_k, 0.2)
+			velocity.y = -last_velocity_y * bounce_restitution
+			position.y -= 5 
+		else:
+			velocity.y = 0
 
 ## Manages the X variable and Buckling state
 func _handle_compression_logic(delta):
@@ -141,7 +173,7 @@ func launch_player():
 	var spring_force = (current_k * current_x) * -1
 	
 	velocity.y = spring_force
-	position.y -= 2 # Prevent immediate floor re-collision
+	position.y -= 2 
 	
 	# Reset Jump States
 	current_x = 0.0
@@ -149,3 +181,8 @@ func launch_player():
 	is_buckling = false
 	has_buckled = false
 	peak_timer = 0.0
+	
+	# --- ADD THIS TO BE SAFE ---
+	accumulated_rotation = 0.0
+	last_frame_rotation = rotation_degrees
+	has_flipped = false

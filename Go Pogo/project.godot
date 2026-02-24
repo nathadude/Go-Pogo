@@ -15,6 +15,14 @@ run/main_scene="uid://djlh5o56djjv7"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+HUD="*res://Scenes/HUD.tscn"
+
+[global_group]
+
+score_label="Label for tracking player score (maybe money evenually)"
+
 [input]
 
 ui_left={
