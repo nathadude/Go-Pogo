@@ -64,9 +64,39 @@ func _physics_process(delta):
 # Check if they've hit the 360 mark (with a little leeway, e.g., 330)
 		if accumulated_rotation >= 330:
 					has_flipped = true
-		# Raycast check: If we are close to ground, we can't trick anymore
-		can_trick = not floor_detector.is_colliding()
-		last_velocity_y = velocity.y # track fall speed
+					# SHOUT TO SCORE MANAGER
+					var sm = get_tree().get_first_node_in_group("score_manager")
+					if sm: sm.register_trick_completed()
+					# Reset accumulated_rotation so they can get another x1 in the same airtime!
+					accumulated_rotation = 0
+
+		var ray_hitting = floor_detector.is_colliding()
+		
+		# --- NEW CLUTCH & PRIME LOGIC ---
+		
+		# CASE A: Going Up (Protect from immediate spinning)
+		if velocity.y < 0:
+			if ray_hitting:
+				can_trick = false # Hard block on starting a new spin
+			else:
+				can_trick = true
+		
+		# CASE B: Going Down (The "Clutch" or "Prime" zone)
+		else: 
+			if ray_hitting:
+				# If already spinning, let them finish (The Clutch)
+				if trick_manager.is_rotating: 
+					can_trick = true
+				else:
+					# Not spinning? Lock out tricks and "Prime" the spring
+					can_trick = false
+					if Input.is_action_pressed("move_up"):
+						is_compressing = true # "Primed" for the impact
+			else:
+				# High in the air, do whatever you want
+				can_trick = true
+
+		last_velocity_y = velocity.y
 		velocity.y += gravity * delta
 		velocity.y = clamp(velocity.y, -99999, max_fall_speed)
 
@@ -74,14 +104,10 @@ func _physics_process(delta):
 	else:
 		if last_velocity_y > 50:
 			_handle_impact()
-			#last_velocity_y = 0 DO NOT ZERO HERE, LET THE HANDLERS HANDLE, DUH.
-
-	# 3. INPUT HANDLING: COMPRESSION
-	# This tri1ggers if we are on floor OR close enough (RayCast hitting)
-	# BIG ISSUE HERE FOR FUTURE FIX: COMPRESSION TIME VARIES AFTER RAYCAST IMPLEMENTATION
-	#Raycast and collision are fighting over
-	if is_on_floor():
+		
+		# 3. INPUT HANDLING (This now benefits from the 'primed' state)
 		if Input.is_action_pressed("move_up") and not has_buckled:
+			# If we primed it in the air, this starts charging frame-1 of impact
 			_handle_compression_logic(delta)
 		
 		elif is_compressing and Input.is_action_just_released("move_up"):
@@ -158,6 +184,10 @@ func _handle_compression_logic(delta):
 ## Calculates accuracy, applies rewards, and launches
 func _finalize_jump():
 	var accuracy = current_x / max_compression_x
+	
+	# SHOUT TO SCORE MANAGER
+	var sm = get_tree().get_first_node_in_group("score_manager")
+	if sm: sm.register_jump(accuracy, has_buckled)
 	
 	if has_buckled:
 		current_k = current_k - (current_k/4) # Penalty for buckling

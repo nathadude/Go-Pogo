@@ -8,6 +8,7 @@ var is_calibrated := false
 func _ready():
 	# Look for the player when the HUD spawns
 	player = get_tree().get_first_node_in_group("player")
+	max_height = 0.0
 
 func _process(_delta):
 	if not player: 

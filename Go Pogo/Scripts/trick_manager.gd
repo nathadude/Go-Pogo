@@ -7,7 +7,8 @@ signal multiplier_changed(new_value)
 
 var current_multiplier := 1.0
 var total_rotation_this_jump := 0.0
-var is_trick_animating := false # Used for the "tap" trick
+var is_rotating := false
+#var is_trick_animating := false # Used for the "tap" trick
 
 @onready var player = get_parent()
 
@@ -19,8 +20,12 @@ var is_trick_animating := false # Used for the "tap" trick
 func _process(delta):
 	# The Player.gd script toggles "can_trick" based on the RayCast
 	if not player.is_on_floor() and player.can_trick:
-		if Input.is_action_pressed("move_up") and not is_trick_animating:
+		if Input.is_action_pressed("move_up"):
+			#perform_midair_trick()
+			is_rotating = true
 			_handle_rotation_input(delta)
+		else:
+			is_rotating = false
 
 func _handle_rotation_input(delta):
 	var rotation_step = rotation_speed * delta
@@ -34,17 +39,17 @@ func _handle_rotation_input(delta):
 		total_rotation_this_jump -= 360.0 
 		multiplier_changed.emit(current_multiplier)
 
-## Sonic Rush Style "Tap" Trick (Optional: Call this from Player.gd if you prefer taps)
-func perform_midair_trick(sprite: Sprite2D):
-	if is_trick_animating: return 
-	
-	is_trick_animating = true
-	current_multiplier += 0.5
-	multiplier_changed.emit(current_multiplier)
-	
-	var tween = create_tween()
-	tween.tween_property(sprite, "rotation_degrees", player.rotation_degrees + 360, 0.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
-	tween.finished.connect(func(): is_trick_animating = false)
+##optional single click trick
+#func perform_midair_trick(sprite: Sprite2D):
+	#if is_trick_animating: return 
+	#
+	#is_trick_animating = true
+	#current_multiplier += 0.5
+	#multiplier_changed.emit(current_multiplier)
+	#
+	#var tween = create_tween()
+	#tween.tween_property(sprite, "rotation_degrees", player.rotation_degrees + 360, 0.4).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	#tween.finished.connect(func(): is_trick_animating = false)
 
 func reset_multiplier(pay_out: bool):
 	if pay_out:

@@ -7,9 +7,13 @@ signal landing_processed(msg, is_bad)
 @onready var score_label = get_tree().get_first_node_in_group("score_label")
 
 func process_impact(angle: float, velocity_y: float):
+	var sm = get_tree().get_first_node_in_group("score_manager")
+	
 	if angle >= 45.0:
+		if sm: sm.reset_multiplier()
 		_handle_bad_landing(velocity_y)
 	else:
+		if sm: sm.register_landing(angle)
 		_process_reward(angle)
 
 func _process_reward(error: float):

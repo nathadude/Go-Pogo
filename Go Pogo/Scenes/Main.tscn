@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=4 uid="uid://djlh5o56djjv7"]
+[gd_scene load_steps=18 format=4 uid="uid://djlh5o56djjv7"]
 
 [ext_resource type="Script" uid="uid://dmfgw1fj4omij" path="res://Scripts/player2.0.gd" id="1_bmxlf"]
 [ext_resource type="Script" uid="uid://cepjtkbnyrclx" path="res://Scripts/ray_cast_2d.gd" id="2_4kpch"]
@@ -6,9 +6,12 @@
 [ext_resource type="Script" uid="uid://dc76flya2x05q" path="res://Scripts/sprite_2d.gd" id="4_frkhe"]
 [ext_resource type="Script" uid="uid://dpame8mpnbvc7" path="res://Scripts/trick_manager.gd" id="5_1p5hy"]
 [ext_resource type="Script" uid="uid://caqxw8whdwn1e" path="res://Scripts/LandingManager.gd" id="6_h1m7h"]
+[ext_resource type="Script" uid="uid://cq0uky76wfoq1" path="res://Scripts/height_tracker.gd" id="7_erwvk"]
 [ext_resource type="Script" uid="uid://cpgaqwirgaq8f" path="res://Scripts/jump_timing_feedback.gd" id="8_2w5on"]
 [ext_resource type="Texture2D" uid="uid://dh7g5mqmvkqfg" path="res://simple_tileset.png" id="9_346fj"]
 [ext_resource type="Script" uid="uid://5o45gfr8yhik" path="res://Scripts/killzone.gd" id="10_0sclb"]
+[ext_resource type="Script" uid="uid://glu438oeh5d0" path="res://Scenes/score_manager.gd" id="11_4kpch"]
+[ext_resource type="Script" uid="uid://b00ufjswihrra" path="res://Scenes/game_manager.gd" id="12_grg3l"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_uu6xs"]
 radius = 7.95456
@@ -79,6 +82,15 @@ script = ExtResource("5_1p5hy")
 [node name="LandingManager" type="Node2D" parent="Player"]
 script = ExtResource("6_h1m7h")
 
+[node name="HeightTracker" type="Label" parent="Player" groups=["height_label"]]
+visible = false
+offset_left = -134.0
+offset_top = 17.0
+offset_right = -24.0
+offset_bottom = 40.0
+text = "HeightTracker"
+script = ExtResource("7_erwvk")
+
 [node name="JumpTimingFeedback" type="Label" parent="." groups=["feedback_label"]]
 offset_left = 593.0
 offset_top = 551.0
@@ -93,7 +105,7 @@ script = ExtResource("8_2w5on")
 [node name="FeedbackTimer" type="Timer" parent="JumpTimingFeedback"]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
-tile_map_data = PackedByteArray("AAAqACQAAAAAAAAAAAAqACUAAAAAAAEAAAArACQAAAABAAAAAAArACUAAAABAAEAAAApACQAAAABAAAAAAApACUAAAABAAEAAAAeACQAAAAAAAAAAAAeACUAAAAAAAEAAAAcACQAAAAAAAAAAAAdACQAAAABAAAAAAAdACUAAAABAAEAAAAcACUAAAAAAAEAAAAfACQAAAABAAAAAAAgACQAAAAAAAAAAAAhACQAAAABAAAAAAAiACQAAAAAAAAAAAAjACQAAAABAAAAAAAkACQAAAAAAAAAAAAlACQAAAABAAAAAAAmACQAAAAAAAAAAAAnACQAAAABAAAAAAAoACQAAAAAAAAAAAAoACUAAAAAAAEAAAAnACUAAAABAAEAAAAmACUAAAAAAAEAAAAlACUAAAABAAEAAAAkACUAAAAAAAEAAAAjACUAAAABAAEAAAAiACUAAAAAAAEAAAAhACUAAAABAAEAAAAgACUAAAAAAAEAAAAfACUAAAABAAEAAAA=")
+tile_map_data = PackedByteArray("AAAqACQAAAAAAAAAAAAqACUAAAAAAAAAAAArACQAAAABAAAAAAArACUAAAAAAAAAAAApACQAAAABAAAAAAApACUAAAAAAAAAAAAeACQAAAAAAAAAAAAeACUAAAAAAAAAAAAcACQAAAAAAAAAAAAdACQAAAABAAAAAAAdACUAAAAAAAAAAAAcACUAAAAAAAAAAAAfACQAAAABAAAAAAAgACQAAAAAAAAAAAAhACQAAAABAAAAAAAiACQAAAAAAAAAAAAjACQAAAABAAAAAAAkACQAAAAAAAAAAAAlACQAAAABAAAAAAAmACQAAAAAAAAAAAAnACQAAAABAAAAAAAoACQAAAAAAAAAAAAoACUAAAAAAAAAAAAnACUAAAAAAAAAAAAmACUAAAAAAAAAAAAlACUAAAAAAAAAAAAkACUAAAAAAAAAAAAjACUAAAAAAAAAAAAiACUAAAAAAAAAAAAhACUAAAAAAAAAAAAgACUAAAAAAAAAAAAfACUAAAAAAAAAAAAbACQAAAAAAAAAAAAbACUAAAAAAAAAAAAsACQAAAAAAAAAAAAtACQAAAAAAAAAAAAsACUAAAAAAAAAAAAtACUAAAAAAAAAAAAaACQAAAAAAAAAAAAaACUAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_fos0i")
 
 [node name="KillZone" type="Area2D" parent="."]
@@ -103,6 +115,13 @@ script = ExtResource("10_0sclb")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="KillZone"]
 position = Vector2(1020.75, 863)
 shape = SubResource("RectangleShape2D_fos0i")
+
+[node name="ScoreManager" type="Node2D" parent="." groups=["score_manager"]]
+script = ExtResource("11_4kpch")
+
+[node name="GameManager" type="Node" parent="." groups=["game_manager"]]
+process_mode = 3
+script = ExtResource("12_grg3l")
 
 [connection signal="jumped" from="Player" to="JumpTimingFeedback" method="_on_player_jumped"]
 [connection signal="landing_processed" from="Player/LandingManager" to="JumpTimingFeedback" method="_on_landing_processed"]

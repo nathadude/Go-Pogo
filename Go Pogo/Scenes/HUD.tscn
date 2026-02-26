@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bluvrlbcdhxyp"]
+[gd_scene load_steps=4 format=3 uid="uid://bluvrlbcdhxyp"]
 
 [ext_resource type="Script" uid="uid://csmtoehdk25k6" path="res://Scenes/HeightTracker.gd" id="1_sd512"]
 [ext_resource type="Script" uid="uid://bqhhj2mngul4d" path="res://Scenes/score_label.gd" id="2_jo1ms"]
+[ext_resource type="Script" uid="uid://bh13secd5vof3" path="res://Scenes/game_over_screen.gd" id="3_psnte"]
 
 [node name="CanvasLayer" type="CanvasLayer"]
 
@@ -21,16 +22,89 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Stats_TopRight" type="VBoxContainer" parent="HUD_Container/MarginContainer"]
+[node name="TimerLabel" type="Label" parent="HUD_Container/MarginContainer" groups=["timer_label"]]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 8
+theme_override_font_sizes/font_size = 25
+text = "Time Left: 00"
+
+[node name="Stats_TopRight" type="VBoxContainer" parent="HUD_Container/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
 
 [node name="HeightTracker" type="Label" parent="HUD_Container/MarginContainer/Stats_TopRight"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 script = ExtResource("1_sd512")
 
 [node name="ScoreLabel" type="Label" parent="HUD_Container/MarginContainer/Stats_TopRight" groups=["score_label"]]
 layout_mode = 2
+theme_override_font_sizes/font_size = 30
 text = "SCORE: 000000"
 script = ExtResource("2_jo1ms")
+
+[node name="GameOverScreen" type="ColorRect" parent="."]
+process_mode = 3
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.780392, 0.513726, 0.882353, 0.564706)
+script = ExtResource("3_psnte")
+
+[node name="NewBestLabel" type="Label" parent="GameOverScreen"]
+visible = false
+layout_mode = 2
+offset_left = 556.0
+offset_top = 191.0
+offset_right = 791.0
+offset_bottom = 233.0
+rotation = 0.327956
+theme_override_colors/font_color = Color(1, 1, 0, 1)
+theme_override_font_sizes/font_size = 26
+text = "New High Score!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GameOverScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -61.5
+offset_right = 40.0
+offset_bottom = 61.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(40.355, 57.5)
+
+[node name="TIME\'S UP!" type="Label" parent="GameOverScreen/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "TIME'S UP!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HighScoreLabel" type="Label" parent="GameOverScreen/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "High Score: 000000"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FinalScoreLabel" type="Label" parent="GameOverScreen/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RestartButton" type="Button" parent="GameOverScreen/VBoxContainer"]
+layout_mode = 2
+text = "RESTART"

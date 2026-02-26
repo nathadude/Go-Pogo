@@ -7,14 +7,7 @@ var is_calibrated := false
 #var parent_rotation
 #var parent_position
 
-func _process(_delta):
-	
-	#counteract parent node movement to anchor label...until UI is refactored
-	#parent_rotation = get_parent().rotation
-	#parent_position = get_parent().position
-	#set_rotation (- parent_rotation)
-	#set_position(- parent_position)
-	
+func _process(_delta):	
 	if not player: return
 	
 	# CALIBRATION: Wait for the first time the player hits the ground
